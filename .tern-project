@@ -1,0 +1,11 @@
+{
+  "ecmaVersion": 2018,
+  "libs": [],
+  "loadEagerly": [
+    "index.js"
+  ],
+  "plugins": {
+    "node": {},
+    "es_modules": {}
+  }
+}
