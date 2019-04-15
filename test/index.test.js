@@ -14,9 +14,12 @@ test('Renderer: MarkdownIt: render(): can accept a config', (t) => {
 test('Renderer: MarkdownIt: render(): handles empty values', (t) => {
   const renderer = new MarkdownItRenderer();
   t.is(renderer.render(''), '');
+  t.is(renderer.render(' '), '');
   t.is(renderer.render(null), '');
   t.is(renderer.render(NaN), '');
   t.is(renderer.render(undefined), '');
+  t.is(renderer.render(false), '');
+  t.is(renderer.render(), '');
 });
 
 test('Renderer: MarkdownIt: render(): replaces missing links with a slugified link', (t) => {

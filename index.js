@@ -8,8 +8,9 @@ class MarkdownItRenderer {
 
   render(input) {
     input = input || '';
+    // Remove empty links.
     input = input.replace('[]()', '');
-    const missingLinks = input.match(/\[(.*)]\(\)/g) || [];
+    const missingLinks = input.match(/\[(.*)]\(\s?\)/g) || [];
     if (missingLinks && missingLinks.length > 0) {
       missingLinks.forEach((match) => {
         const title = match.substr(1).slice(0, -3);
