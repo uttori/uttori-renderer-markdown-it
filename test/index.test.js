@@ -1,5 +1,5 @@
 const test = require('ava');
-const MarkdownItRenderer = require('..');
+const MarkdownItRenderer = require('../src');
 
 test('Renderer: MarkdownIt: render(): can initilize without a config', (t) => {
   const renderer = new MarkdownItRenderer();
