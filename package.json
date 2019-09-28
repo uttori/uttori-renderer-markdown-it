@@ -40,9 +40,9 @@
     "nyc": "^14.1.1"
   },
   "files": [
-    "./src/index.js"
+    "src/*"
   ],
-  "main": "./src/index.js",
+  "main": "src/index.js",
   "nyc": {
     "cache": true,
     "all": true,
