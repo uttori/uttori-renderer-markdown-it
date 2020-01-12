@@ -2,17 +2,31 @@ const debug = require('debug')('Uttori.Plugin.Render.MarkdownIt');
 const MarkdownIt = require('markdown-it');
 const slugify = require('slugify');
 
+/**
+ * Uttori MarkdownIt Renderer
+ * @example <caption>MarkdownItRenderer</caption>
+ * const content = MarkdownItRenderer.render("...");
+ * @class
+ */
 class MarkdownItRenderer {
-  static register(context) {
-    if (!context || !context.hooks || typeof context.hooks.on !== 'function') {
-      throw new Error("Missing event dispatcher in 'context.hooks.on(event, callback)' format.");
-    }
-    context.hooks.on('render-content', MarkdownItRenderer.renderContent); // UttoriWiki
-    context.hooks.on('render-meta-description', MarkdownItRenderer.renderContent); // UttoriWiki
-    context.hooks.on('render-search-results', MarkdownItRenderer.renderCollection); // UttoriWiki
-    context.hooks.on('validate-config', MarkdownItRenderer.validateConfig); // UttoriWiki
+  /**
+   * The configuration key for plugin to look for in the provided configuration.
+   * @return {String} The configuration key.
+   * @example <caption>MarkdownItRenderer.configKey</caption>
+   * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+   * @static
+   */
+  static get configKey() {
+    return 'uttori-plugin-renderer-markdown-it';
   }
 
+  /**
+   * The default configuration.
+   * @return {Object} The configuration.
+   * @example <caption>MarkdownItRenderer.defaultConfig()</caption>
+   * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+   * @static
+   */
   static defaultConfig() {
     return {
       // Enable HTML tags in source
@@ -43,29 +57,124 @@ class MarkdownItRenderer {
     };
   }
 
+  /**
+   * Validates the provided configuration for required entries.
+   * @param {Object} config - A configuration object.
+   * @param {Object} config[MarkdownItRenderer.configKey] - A configuration object specifically for this plugin.
+   * @example <caption>MarkdownItRenderer.validateConfig(config, _context)</caption>
+   * SitemapGenerator.validateConfig({ ... });
+   * @static
+   */
   static validateConfig(config, _context) {
     debug('Validating config...');
-    if (!config || !config.renderMarkdownIt) {
+    if (!config || !config[MarkdownItRenderer.configKey]) {
       debug('Config Warning: `renderMarkdownIt` configuration key is missing.');
     }
     debug('Validated config.');
   }
 
-  static renderContent(content, context = { config: { renderMarkdownIt: {} } }) {
-    debug('Rendering content');
-    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config.renderMarkdownIt };
+  /**
+   * Register the plugin with a provided set of events on a provided Hook system.
+   * @param {Object} context - A Uttori-like context.
+   * @param {Object} context.hooks - An event system / hook system to use.
+   * @param {Function} context.hooks.on - An event registration function.
+   * @param {Object} context.config - A provided configuration to use.
+   * @param {Object} context.config.events - An object whose keys correspong to methods, and contents are events to listen for.
+   * @example <caption>MarkdownItRenderer.register(context)</caption>
+   * const context = {
+   *   hooks: {
+   *     on: (event, callback) => { ... },
+   *   },
+   *   config: {
+   *     [MarkdownItRenderer.configKey]: {
+   *       ...,
+   *       events: {
+   *         callback: ['render-content', 'render-meta-description', 'render-search-results'],
+   *         validateConfig: ['validate-config'],
+   *       },
+   *     },
+   *   },
+   * };
+   * MarkdownItRenderer.register(context);
+   * @static
+   */
+  static register(context) {
+    if (!context || !context.hooks || typeof context.hooks.on !== 'function') {
+      throw new Error("Missing event dispatcher in 'context.hooks.on(event, callback)' format.");
+    }
+    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+    if (!config.events) {
+      throw new Error("Missing events to listen to for in 'config.events'.");
+    }
+    Object.keys(config.events).forEach((method) => {
+      config.events[method].forEach((event) => context.hooks.on(event, MarkdownItRenderer[method]));
+    });
+  }
+
+  /**
+   * Renders Markdown for a provided string with a provided context.
+   * @param {String} content - Markdown content to be converted to HTML.
+   * @param {Object} context - A Uttori-like context.
+   * @param {Object} context.config - A provided configuration to use.
+   * @return {String} The rendered content.
+   * @example <caption>MarkdownItRenderer.renderContent(content, context)</caption>
+   * const context = {
+   *   config: {
+   *     [MarkdownItRenderer.configKey]: {
+   *       ...,
+   *     },
+   *   },
+   * };
+   * MarkdownItRenderer.renderContent(content, context);
+   * @static
+   */
+  static renderContent(content, context) {
+    debug('renderContent');
+    if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
+      throw new Error('Missing configuration.');
+    }
+    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
     return MarkdownItRenderer.render(content, config);
   }
 
-  static renderCollection(collection, context = { config: { renderMarkdownIt: {} } }) {
-    debug('Rendering collection:', collection.length);
-    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config.renderMarkdownIt };
+  /**
+   * Renders Markdown for a collection of Uttori documents with a provided context.
+   * @param {Object[]} collection - A collection of Uttori documents.
+   * @param {Object} context - A Uttori-like context.
+   * @param {Object} context.config - A provided configuration to use.
+   * @return {Object[]}} The rendered documents.
+   * @example <caption>MarkdownItRenderer.renderCollection(collection, context)</caption>
+   * const context = {
+   *   config: {
+   *     [MarkdownItRenderer.configKey]: {
+   *       ...,
+   *     },
+   *   },
+   * };
+   * MarkdownItRenderer.renderCollection(collection, context);
+   * @static
+   */
+  static renderCollection(collection, context) {
+    debug('renderCollection:', collection.length);
+    if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
+      throw new Error('Missing configuration.');
+    }
+    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
     return collection.map((document) => {
       const html = MarkdownItRenderer.render(document.html, config);
       return { ...document, html };
     });
   }
 
+  /**
+   * Renders Markdown for a provided string with a provided MarkdownIt configuration.
+   * @param {String} content - Markdown content to be converted to HTML.
+   * @param {Object} config - A provided MarkdownIt configuration to use.
+   * @return {String} The rendered content.
+   * @example <caption>MarkdownItRenderer.render(content, config)</caption>
+   * const html = MarkdownItRenderer.render(content, config);
+   * @static
+   */
   static render(content, config) {
     if (!content) {
       debug('No input provided, returning a blank string.');
