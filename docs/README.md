@@ -101,7 +101,8 @@ const context = {
     [MarkdownItRenderer.configKey]: {
       ...,
       events: {
-        callback: ['render-content', 'render-meta-description', 'render-search-results'],
+        renderContent: ['render-content', 'render-meta-description'],
+        renderCollection: ['render-search-results'],
         validateConfig: ['validate-config'],
       },
     },
