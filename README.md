@@ -16,7 +16,20 @@ npm install --save uttori-plugin-renderer-markdown-it
 
 ## Config
 
-The only supported config is passing in [MarkdownIt](https://github.com/markdown-it/markdown-it#init-with-presets-and-options) config.
+```js
+{
+  // Registration Events
+  events: {
+    renderContent: [],
+    renderCollection: [],
+    validateConfig: [],
+  },
+  // MarkdownIt Configuration
+  ...,
+}
+```
+
+The only supported configuration outside of registration events is passing in [MarkdownIt](https://github.com/markdown-it/markdown-it#init-with-presets-and-options) config.
 
 * * *
 
