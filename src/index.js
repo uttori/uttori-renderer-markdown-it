@@ -62,13 +62,13 @@ class MarkdownItRenderer {
    * @param {Object} config - A configuration object.
    * @param {Object} config[MarkdownItRenderer.configKey] - A configuration object specifically for this plugin.
    * @example <caption>MarkdownItRenderer.validateConfig(config, _context)</caption>
-   * SitemapGenerator.validateConfig({ ... });
+   * MarkdownItRenderer.validateConfig({ ... });
    * @static
    */
   static validateConfig(config, _context) {
     debug('Validating config...');
     if (!config || !config[MarkdownItRenderer.configKey]) {
-      debug('Config Warning: `renderMarkdownIt` configuration key is missing.');
+      debug(`Config Warning: '${MarkdownItRenderer.configKey}' configuration key is missing.`);
     }
     debug('Validated config.');
   }

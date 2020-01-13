@@ -87,7 +87,7 @@ Validates the provided configuration for required entries.
 
 **Example** *(MarkdownItRenderer.validateConfig(config, _context))*  
 ```js
-SitemapGenerator.validateConfig({ ... });
+MarkdownItRenderer.validateConfig({ ... });
 ```
 <a name="MarkdownItRenderer.register"></a>
 
