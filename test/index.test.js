@@ -10,13 +10,13 @@ test('MarkdownItRenderer.register(context): can register', (t) => {
 test('MarkdownItRenderer.register(context): errors without event dispatcher', (t) => {
   t.throws(() => {
     MarkdownItRenderer.register({ hooks: {} });
-  }, 'Missing event dispatcher in \'context.hooks.on(event, callback)\' format.');
+  }, { message: 'Missing event dispatcher in \'context.hooks.on(event, callback)\' format.' });
 });
 
 test('MarkdownItRenderer.register(context): errors without events', (t) => {
   t.throws(() => {
     MarkdownItRenderer.register({ hooks: { on: () => {} }, config: { [MarkdownItRenderer.configKey]: { } } });
-  }, 'Missing events to listen to for in \'config.events\'.');
+  }, { message: 'Missing events to listen to for in \'config.events\'.' });
 });
 
 test('MarkdownItRenderer.defaultConfig(): can return a default config', (t) => {
@@ -33,7 +33,7 @@ test('MarkdownItRenderer.validateConfig(config, _context): can validate a config
 test('MarkdownItRenderer.renderContent(content, context): throws error without a config', (t) => {
   t.throws(() => {
     MarkdownItRenderer.renderContent('![test](/test.png)');
-  }, 'Missing configuration.');
+  }, { message: 'Missing configuration.' });
 });
 
 test('MarkdownItRenderer.renderContent(content, context): can accept a config', (t) => {
@@ -43,7 +43,7 @@ test('MarkdownItRenderer.renderContent(content, context): can accept a config', 
 test('MarkdownItRenderer.renderCollection(collection, context): throws error without a config', (t) => {
   t.throws(() => {
     MarkdownItRenderer.renderCollection([{ html: '![test](/test.png)' }]);
-  }, 'Missing configuration.');
+  }, { message: 'Missing configuration.' });
 });
 
 test('MarkdownItRenderer.renderCollection(collection, context): can accept a config', (t) => {
