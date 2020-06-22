@@ -18,6 +18,8 @@ npm install --save @uttori/plugin-renderer-markdown-it
 
 ## Config
 
+Configuration outside of registration events and Uttori specific items is avaliable by passing in [MarkdownIt](https://github.com/markdown-it/markdown-it#init-with-presets-and-options) config.
+
 ```js
 {
   // Registration Events
@@ -70,8 +72,6 @@ npm install --save @uttori/plugin-renderer-markdown-it
   },
 }
 ```
-
-The only supported configuration outside of registration events is passing in [MarkdownIt](https://github.com/markdown-it/markdown-it#init-with-presets-and-options) config.
 
 * * *
 
