@@ -1,9 +1,10 @@
 const debug = require('debug')('Uttori.Plugin.Render.MarkdownIt');
 const MarkdownIt = require('markdown-it');
 const slugify = require('slugify');
-
+const markdownItPlugin = require('./markdown-it-plugin');
 /**
  * Uttori MarkdownIt Renderer
+ *
  * @example <caption>MarkdownItRenderer</caption>
  * const content = MarkdownItRenderer.render("...");
  * @class
@@ -11,7 +12,8 @@ const slugify = require('slugify');
 class MarkdownItRenderer {
   /**
    * The configuration key for plugin to look for in the provided configuration.
-   * @return {String} The configuration key.
+   *
+   * @returns {string} The configuration key.
    * @example <caption>MarkdownItRenderer.configKey</caption>
    * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
    * @static
@@ -22,7 +24,8 @@ class MarkdownItRenderer {
 
   /**
    * The default configuration.
-   * @return {Object} The configuration.
+   *
+   * @returns {object} The configuration.
    * @example <caption>MarkdownItRenderer.defaultConfig()</caption>
    * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
    * @static
@@ -54,13 +57,28 @@ class MarkdownItRenderer {
       // Highlighter function. Should return escaped HTML, or '' if the source string is not changed and should be escaped externally.
       // If result starts with <pre... internal wrapper is skipped.
       // highlight: (/* str, lang */) => '',
+
+      // Custom Values for Uttori Specific Use
+      uttori: {
+        // Prefix for relative URLs, useful when the Express app is not at root.
+        baseUrl: '',
+
+        // Allowed External Domains, if a domain is not in this list, it is set to 'nofollow'.
+        // Values should be strings of the hostname portion of the URL object, https://nodejs.org/api/url.html#url_url_hostname
+        allowedExternalDomains: [],
+
+        // Open external domains in a new window.
+        openNewWindow: true,
+      },
     };
   }
 
   /**
    * Validates the provided configuration for required entries.
-   * @param {Object} config - A configuration object.
-   * @param {Object} config[MarkdownItRenderer.configKey] - A configuration object specifically for this plugin.
+   *
+   * @param {object} config - A configuration object.
+   * @param {object} config.configKey - A configuration object specifically for this plugin.
+   * @param {object} _context - Unused
    * @example <caption>MarkdownItRenderer.validateConfig(config, _context)</caption>
    * MarkdownItRenderer.validateConfig({ ... });
    * @static
@@ -68,18 +86,25 @@ class MarkdownItRenderer {
   static validateConfig(config, _context) {
     debug('Validating config...');
     if (!config || !config[MarkdownItRenderer.configKey]) {
-      debug(`Config Warning: '${MarkdownItRenderer.configKey}' configuration key is missing.`);
+      throw new Error(`MarkdownItRenderer Config Warning: '${MarkdownItRenderer.configKey}' configuration key is missing.`);
+    }
+    if (!config[MarkdownItRenderer.configKey].uttori) {
+      throw new Error('MarkdownItRenderer Config Warning: \'uttori\' configuration key is missing.');
+    }
+    if (!Array.isArray(config[MarkdownItRenderer.configKey].uttori.allowedExternalDomains)) {
+      throw new TypeError('MarkdownItRenderer Config Warning: \'uttori.allowedExternalDomains\' is missing or not an array.');
     }
     debug('Validated config.');
   }
 
   /**
    * Register the plugin with a provided set of events on a provided Hook system.
-   * @param {Object} context - A Uttori-like context.
-   * @param {Object} context.hooks - An event system / hook system to use.
+   *
+   * @param {object} context - A Uttori-like context.
+   * @param {object} context.hooks - An event system / hook system to use.
    * @param {Function} context.hooks.on - An event registration function.
-   * @param {Object} context.config - A provided configuration to use.
-   * @param {Object} context.config.events - An object whose keys correspong to methods, and contents are events to listen for.
+   * @param {object} context.config - A provided configuration to use.
+   * @param {object} context.config.events - An object whose keys correspong to methods, and contents are events to listen for.
    * @example <caption>MarkdownItRenderer.register(context)</caption>
    * const context = {
    *   hooks: {
@@ -103,21 +128,35 @@ class MarkdownItRenderer {
     if (!context || !context.hooks || typeof context.hooks.on !== 'function') {
       throw new Error("Missing event dispatcher in 'context.hooks.on(event, callback)' format.");
     }
-    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+    const config = {
+      ...MarkdownItRenderer.defaultConfig(),
+      ...context.config[MarkdownItRenderer.configKey],
+      uttori: {
+        ...MarkdownItRenderer.defaultConfig().uttori,
+        ...context.config[MarkdownItRenderer.configKey].uttori,
+      },
+    };
     if (!config.events) {
       throw new Error("Missing events to listen to for in 'config.events'.");
     }
     Object.keys(config.events).forEach((method) => {
-      config.events[method].forEach((event) => context.hooks.on(event, MarkdownItRenderer[method]));
+      config.events[method].forEach((event) => {
+        if (typeof MarkdownItRenderer[method] !== 'function') {
+          debug(`Missing function "${method}" for key "${event}"`);
+          return;
+        }
+        context.hooks.on(event, MarkdownItRenderer[method]);
+      });
     });
   }
 
   /**
    * Renders Markdown for a provided string with a provided context.
-   * @param {String} content - Markdown content to be converted to HTML.
-   * @param {Object} context - A Uttori-like context.
-   * @param {Object} context.config - A provided configuration to use.
-   * @return {String} The rendered content.
+   *
+   * @param {string} content - Markdown content to be converted to HTML.
+   * @param {object} context - A Uttori-like context.
+   * @param {object} context.config - A provided configuration to use.
+   * @returns {string} The rendered content.
    * @example <caption>MarkdownItRenderer.renderContent(content, context)</caption>
    * const context = {
    *   config: {
@@ -134,16 +173,24 @@ class MarkdownItRenderer {
     if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
       throw new Error('Missing configuration.');
     }
-    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+    const config = {
+      ...MarkdownItRenderer.defaultConfig(),
+      ...context.config[MarkdownItRenderer.configKey],
+      uttori: {
+        ...MarkdownItRenderer.defaultConfig().uttori,
+        ...context.config[MarkdownItRenderer.configKey].uttori,
+      },
+    };
     return MarkdownItRenderer.render(content, config);
   }
 
   /**
    * Renders Markdown for a collection of Uttori documents with a provided context.
-   * @param {Object[]} collection - A collection of Uttori documents.
-   * @param {Object} context - A Uttori-like context.
-   * @param {Object} context.config - A provided configuration to use.
-   * @return {Object[]}} The rendered documents.
+   *
+   * @param {object[]} collection - A collection of Uttori documents.
+   * @param {object} context - A Uttori-like context.
+   * @param {object} context.config - A provided configuration to use.
+   * @returns {object[]}} The rendered documents.
    * @example <caption>MarkdownItRenderer.renderCollection(collection, context)</caption>
    * const context = {
    *   config: {
@@ -160,7 +207,14 @@ class MarkdownItRenderer {
     if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
       throw new Error('Missing configuration.');
     }
-    const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
+    const config = {
+      ...MarkdownItRenderer.defaultConfig(),
+      ...context.config[MarkdownItRenderer.configKey],
+      uttori: {
+        ...MarkdownItRenderer.defaultConfig().uttori,
+        ...context.config[MarkdownItRenderer.configKey].uttori,
+      },
+    };
     return collection.map((document) => {
       const html = MarkdownItRenderer.render(document.html, config);
       return { ...document, html };
@@ -169,9 +223,10 @@ class MarkdownItRenderer {
 
   /**
    * Renders Markdown for a provided string with a provided MarkdownIt configuration.
-   * @param {String} content - Markdown content to be converted to HTML.
-   * @param {Object} config - A provided MarkdownIt configuration to use.
-   * @return {String} The rendered content.
+   *
+   * @param {string} content - Markdown content to be converted to HTML.
+   * @param {object} config - A provided MarkdownIt configuration to use.
+   * @returns {string} The rendered content.
    * @example <caption>MarkdownItRenderer.render(content, config)</caption>
    * const html = MarkdownItRenderer.render(content, config);
    * @static
@@ -182,7 +237,7 @@ class MarkdownItRenderer {
       return '';
     }
 
-    const md = new MarkdownIt(config);
+    const md = new MarkdownIt(config).use(markdownItPlugin);
 
     // Remove empty links.
     content = content.replace('[]()', '');

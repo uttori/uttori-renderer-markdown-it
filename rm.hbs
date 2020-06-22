@@ -8,6 +8,8 @@
 
 Uttori renderer support for Markdown powered by [MarkdownIt](https://markdown-it.github.io/).
 
+It uses an internal plugin to allow adding a prefix, and properly handle external domains with `noreferrer nofollow`.
+
 ## Install
 
 ```bash
@@ -26,6 +28,18 @@ npm install --save uttori-plugin-renderer-markdown-it
   },
   // MarkdownIt Configuration
   ...,
+
+  // Custom Values for Uttori Specific Use
+  uttori: {
+    // Prefix for relative URLs, useful when the Express app is not at root.
+    baseUrl: '',
+
+    // Good Noodle List, f a domain is not in this list, it is set to 'external nofollow noreferrer'.
+    allowedExternalDomains: [],
+
+    // Open external domains in a new window.
+    openNewWindow: true,
+  },
 }
 ```
 

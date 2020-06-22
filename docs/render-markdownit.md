@@ -1,52 +1,3 @@
-[![view on npm](http://img.shields.io/npm/v/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
-[![npm module downloads](http://img.shields.io/npm/dt/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
-[![Build Status](https://travis-ci.org/uttori/uttori-plugin-renderer-markdown-it.svg?branch=master)](https://travis-ci.org/uttori/uttori-plugin-renderer-markdown-it)
-[![Dependency Status](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it.svg)](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it)
-[![Coverage Status](https://coveralls.io/repos/uttori/uttori-plugin-renderer-markdown-it/badge.svg?branch=master)](https://coveralls.io/r/uttori/uttori-plugin-renderer-markdown-it?branch=master)
-
-# Uttori Renderer - Markdown - MarkdownIt
-
-Uttori renderer support for Markdown powered by [MarkdownIt](https://markdown-it.github.io/).
-
-## Install
-
-```bash
-npm install --save uttori-plugin-renderer-markdown-it
-```
-
-## Config
-
-```js
-{
-  // Registration Events
-  events: {
-    renderContent: [],
-    renderCollection: [],
-    validateConfig: [],
-  },
-  // MarkdownIt Configuration
-  ...,
-
-  // Custom Values for Uttori Specific Use
-  uttori: {
-    // Prefix for relative URLs, useful when the Express app is not at root.
-    baseUrl: '',
-
-    // Good Noodle List, f a domain is not in this list, it is set to 'external nofollow noreferrer'.
-    allowedExternalDomains: [],
-
-    // Open external domains in a new window.
-    openNewWindow: true,
-  },
-}
-```
-
-The only supported configuration outside of registration events is passing in [MarkdownIt](https://github.com/markdown-it/markdown-it#init-with-presets-and-options) config.
-
-* * *
-
-## API Reference
-
 <a name="MarkdownItRenderer"></a>
 
 ## MarkdownItRenderer
@@ -203,23 +154,3 @@ Renders Markdown for a provided string with a provided MarkdownIt configuration.
 ```js
 const html = MarkdownItRenderer.render(content, config);
 ```
-
-* * *
-
-## Tests
-
-To run the test suite, first install the dependencies, then run `npm test`:
-
-```bash
-npm install
-npm test
-DEBUG=Uttori* npm test
-```
-
-## Contributors
-
-* [Matthew Callis](https://github.com/MatthewCallis)
-
-## License
-
-* [MIT](LICENSE)
