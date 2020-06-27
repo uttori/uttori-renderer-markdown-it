@@ -58,7 +58,7 @@ const Plugin = (md, pluginOptions) => {
                   const url = new URL(href);
                   // If a domain is not in this list, it is set to 'nofollow'.
                   if (options.allowedExternalDomains.includes(url.hostname)) {
-                    updateValue(token, 'rel', 'external');
+                    updateValue(token, 'rel', 'external noopener noreferrer');
                   } else {
                     updateValue(token, 'rel', 'external nofollow noreferrer');
                   }
