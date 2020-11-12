@@ -176,7 +176,7 @@ function Plugin(md, pluginOptions = {}) {
    * @param {object} state - State of MarkdownIt.
    * @param {boolean} silent - State of MarkdownIt.
    */
-  md.inline.ruler.after('emphasis', 'toc', (state, silent) => {
+  md.inline.ruler.after('text', 'toc', (state, silent) => {
     // Don't run any pairs in validation mode
     /* istanbul ignore next */
     if (silent) {
@@ -184,7 +184,7 @@ function Plugin(md, pluginOptions = {}) {
     }
 
     // If the token does not start with `[` it cannot be `[toc]`
-    if (state.src.charCodeAt(state.pos) !== 0x5B /* [ */) {
+    if (state.src.charCodeAt(state.pos) !== 0x5B) {
       return false;
     }
 
