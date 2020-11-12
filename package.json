@@ -19,8 +19,7 @@
   "dependencies": {
     "debug": "^4.2.0",
     "markdown-it": "^12.0.2",
-    "slugify": "^1.4.6",
-    "typescript": "^4.0.5"
+    "slugify": "^1.4.6"
   },
   "devDependencies": {
     "ava": "^3.13.0",
@@ -46,7 +45,8 @@
     "nyc": "^15.1.0",
     "pre-commit": "^1.2.2",
     "release-it": "^14.2.1",
-    "tsd-jsdoc": "^2.5.0"
+    "tsd-jsdoc": "^2.5.0",
+    "typescript": "^4.0.5"
   },
   "files": [
     "src/*",
@@ -84,7 +84,7 @@
     "release": "release-it",
     "report": "nyc report --reporter=html",
     "test": "NODE_ENV=test nyc ava",
-    "test-debug": "DEBUG=Uttori* NODE_ENV=test ava --serial",
+    "test-debug": "DEBUG=Uttori* NODE_ENV=test ava --serial --concurrency=1",
     "validate": "npm ls"
   },
   "directories": {

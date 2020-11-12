@@ -136,7 +136,14 @@ function Plugin(md, pluginOptions = {}) {
     }, '');
 
     // Add the ending tags at the number of indent levels nested
-    return `${list}${'</ul>'.repeat(indent_level)}`;
+    let output = `${list}${'</ul>'.repeat(indent_level)}`;
+
+    // Remove empty nesting levels that result from missing levels, such as no H1 tags.
+    while (output.includes('<ul><ul>')) {
+      output = output.replace('<ul><ul>', '<ul>');
+      output = output.replace('</ul></ul>', '</ul>');
+    }
+    return output;
   };
 
   /**
