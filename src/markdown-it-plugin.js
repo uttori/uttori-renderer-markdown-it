@@ -120,7 +120,7 @@ function Plugin(md, pluginOptions = {}) {
       if (heading.level > indent_level) {
         const level_diff = (heading.level - indent_level);
         for (let i = 0; i < level_diff; i++) {
-          accumulator += '<ul>';
+          accumulator += `<ul class="table-of-contents-h${heading.level}">`;
           indent_level++;
         }
       } else if (heading.level < indent_level) {
@@ -138,9 +138,13 @@ function Plugin(md, pluginOptions = {}) {
     // Add the ending tags at the number of indent levels nested
     let output = `${list}${'</ul>'.repeat(indent_level)}`;
 
-    // Remove empty nesting levels that result from missing levels, such as no H1 tags.
-    while (output.includes('<ul><ul>')) {
-      output = output.replace('<ul><ul>', '<ul>');
+    // Remove empty nesting levels that result from missing levels, such as no H1 or H2 tags.
+    while (output.includes('<ul class="table-of-contents-h2"><ul')) {
+      output = output.replace('<ul class="table-of-contents-h2"><ul', '<ul');
+      output = output.replace('</ul></ul>', '</ul>');
+    }
+    while (output.includes('<ul class="table-of-contents-h3"><ul')) {
+      output = output.replace('<ul class="table-of-contents-h3"><ul', '<ul');
       output = output.replace('</ul></ul>', '</ul>');
     }
     return output;
