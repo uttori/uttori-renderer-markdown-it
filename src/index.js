@@ -13,6 +13,7 @@ class MarkdownItRenderer {
   /**
    * The configuration key for plugin to look for in the provided configuration.
    *
+   * @type {string}
    * @returns {string} The configuration key.
    * @example <caption>MarkdownItRenderer.configKey</caption>
    * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
@@ -69,6 +70,20 @@ class MarkdownItRenderer {
 
         // Open external domains in a new window.
         openNewWindow: true,
+
+        // Table of Contents
+        toc: {
+          // The opening DOM tag for the TOC container.
+          openingTag: '<nav class="table-of-contents">',
+
+          // The closing DOM tag for the TOC container.
+          closingTag: '</nav>',
+
+          // Slugify options for convering content to anchor links.
+          slugify: {
+            lower: true,
+          },
+        },
       },
     };
   }

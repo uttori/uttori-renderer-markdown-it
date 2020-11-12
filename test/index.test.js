@@ -133,3 +133,81 @@ test('MarkdownItRenderer.render(content, config): can set external links to open
   t.is(MarkdownItRenderer.render('[Test](http://evil.org/wiki/test)', { uttori: { openNewWindow: true, allowedExternalDomains: ['example.org'] } }), '<p><a href="http://evil.org/wiki/test" rel="external nofollow noreferrer" target="_blank">Test</a></p>');
   t.is(MarkdownItRenderer.render('[Test](https://evil.org/wiki/test)', { uttori: { openNewWindow: true, allowedExternalDomains: ['example.org'] } }), '<p><a href="https://evil.org/wiki/test" rel="external nofollow noreferrer" target="_blank">Test</a></p>');
 });
+
+test('MarkdownItRenderer.render(content, config): can render a table of contents', (t) => {
+  const markdown = '# First\n## Second\n### Third\n### Third Again\n#### Fouth\n\n## Second Again\n### Third Last\nContent\nContent\n[toc]\nContent\nContent';
+  const output = `<h1 id="first-0">First</h1>
+<h2 id="second-1">Second</h2>
+<h3 id="third-2">Third</h3>
+<h3 id="third-again-3">Third Again</h3>
+<h4 id="fouth-4">Fouth</h4>
+<h2 id="second-again-6">Second Again</h2>
+<h3 id="third-last-7">Third Last</h3>
+<p>Content
+Content
+<nav class="table-of-contents"><ul><li><a href="#first-0" title="First">First</a></li><ul><li><a href="#second-1" title="Second">Second</a></li><ul><li><a href="#third-2" title="Third">Third</a></li><li><a href="#third-again-3" title="Third Again">Third Again</a></li><ul><li><a href="#fouth-4" title="Fouth">Fouth</a></li></ul></ul><li><a href="#second-again-6" title="Second Again">Second Again</a></li><ul><li><a href="#third-last-7" title="Third Last">Third Last</a></li></ul></ul></ul></nav>
+Content
+Content</p>`;
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
+
+test('MarkdownItRenderer.render(content, config): can render a table of contents with empty headers', (t) => {
+  const markdown = '# \n## \n### \n### \n#### \n\n## \n### \nContent\nContent\n[toc]\nContent\nContent';
+  const output = `<h1></h1>
+<h2></h2>
+<h3></h3>
+<h3></h3>
+<h4></h4>
+<h2></h2>
+<h3></h3>
+<p>Content
+Content
+<nav class="table-of-contents"><ul><li><a href="#-0" title=""></a></li><ul><li><a href="#-1" title=""></a></li><ul><li><a href="#-2" title=""></a></li><li><a href="#-3" title=""></a></li><ul><li><a href="#-4" title=""></a></li></ul></ul><li><a href="#-6" title=""></a></li><ul><li><a href="#-7" title=""></a></li></ul></ul></ul></nav>
+Content
+Content</p>`;
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
+
+test('MarkdownItRenderer.render(content, config): can render a table of contents with ending tags', (t) => {
+  const markdown = '# First #\n## Second ##\n### Third ###\n### Third Again ###\n#### Fouth ####\n\n## Second Again ##\n### Third Last ###\nContent\nContent\n[toc]\nContent\nContent';
+  const output = `<h1 id="first-0">First</h1>
+<h2 id="second-1">Second</h2>
+<h3 id="third-2">Third</h3>
+<h3 id="third-again-3">Third Again</h3>
+<h4 id="fouth-4">Fouth</h4>
+<h2 id="second-again-6">Second Again</h2>
+<h3 id="third-last-7">Third Last</h3>
+<p>Content
+Content
+<nav class="table-of-contents"><ul><li><a href="#first-0" title="First">First</a></li><ul><li><a href="#second-1" title="Second">Second</a></li><ul><li><a href="#third-2" title="Third">Third</a></li><li><a href="#third-again-3" title="Third Again">Third Again</a></li><ul><li><a href="#fouth-4" title="Fouth">Fouth</a></li></ul></ul><li><a href="#second-again-6" title="Second Again">Second Again</a></li><ul><li><a href="#third-last-7" title="Third Last">Third Last</a></li></ul></ul></ul></nav>
+Content
+Content</p>`;
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
+
+test('MarkdownItRenderer.render(content, config): can render a table of contents with new lines', (t) => {
+  const markdown = '# First\n## Second\n### Third\n### Third Again\n#### Fouth\n\n## Second Again\n### Third Last\nContent\nContent\n\n[toc]\nContent\nContent';
+  const output = `<h1 id="first-0">First</h1>
+<h2 id="second-1">Second</h2>
+<h3 id="third-2">Third</h3>
+<h3 id="third-again-3">Third Again</h3>
+<h4 id="fouth-4">Fouth</h4>
+<h2 id="second-again-6">Second Again</h2>
+<h3 id="third-last-7">Third Last</h3>
+<p>Content
+Content</p>
+<p><nav class="table-of-contents"><ul><li><a href="#first-0" title="First">First</a></li><ul><li><a href="#second-1" title="Second">Second</a></li><ul><li><a href="#third-2" title="Third">Third</a></li><li><a href="#third-again-3" title="Third Again">Third Again</a></li><ul><li><a href="#fouth-4" title="Fouth">Fouth</a></li></ul></ul><li><a href="#second-again-6" title="Second Again">Second Again</a></li><ul><li><a href="#third-last-7" title="Third Last">Third Last</a></li></ul></ul></ul></nav>
+Content
+Content</p>`;
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
+
+test('MarkdownItRenderer.render(content, config): can render a table of contents with no headers', (t) => {
+  const markdown = 'Content\nContent\n[toc]\nContent\nContent';
+  const output = `<p>Content
+Content
+<nav class="table-of-contents"></nav>
+Content
+Content</p>`;
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
