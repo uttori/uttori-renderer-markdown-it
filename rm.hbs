@@ -1,5 +1,5 @@
-[![view on npm](http://img.shields.io/npm/v/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
-[![npm module downloads](http://img.shields.io/npm/dt/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
+[![view on npm](https://img.shields.io/npm/v/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
+[![npm module downloads](https://img.shields.io/npm/dt/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
 [![Build Status](https://travis-ci.org/uttori/uttori-plugin-renderer-markdown-it.svg?branch=master)](https://travis-ci.org/uttori/uttori-plugin-renderer-markdown-it)
 [![Dependency Status](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it.svg)](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it)
 [![Coverage Status](https://coveralls.io/repos/uttori/uttori-plugin-renderer-markdown-it/badge.svg?branch=master)](https://coveralls.io/r/uttori/uttori-plugin-renderer-markdown-it?branch=master)
