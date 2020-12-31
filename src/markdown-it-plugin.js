@@ -115,6 +115,7 @@ function Plugin(md, pluginOptions = {}) {
     let indent_level = 0;
 
     // Reduce the headers down into a string of the TOC
+    // eslint-disable-next-line unicorn/no-array-reduce
     const list = headings.reduce((accumulator, heading) => {
       // Increase / Decrease depth of nesting
       if (heading.level > indent_level) {
