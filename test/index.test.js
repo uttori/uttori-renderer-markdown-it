@@ -15,7 +15,7 @@ test('MarkdownItRenderer.register(context): errors without event dispatcher', (t
 
 test('MarkdownItRenderer.register(context): errors without events', (t) => {
   t.throws(() => {
-    MarkdownItRenderer.register({ hooks: { on: () => {} }, config: { [MarkdownItRenderer.configKey]: { } } });
+    MarkdownItRenderer.register({ hooks: { on: () => {} }, config: { [MarkdownItRenderer.configKey]: {} } });
   }, { message: 'Missing events to listen to for in \'config.events\'.' });
 });
 

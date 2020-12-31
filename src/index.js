@@ -1,4 +1,4 @@
-const debug = require('debug')('Uttori.Plugin.Render.MarkdownIt');
+let debug = () => {}; try { debug = require('debug')('Uttori.Plugin.Render.MarkdownIt'); } catch {}
 const MarkdownIt = require('markdown-it');
 const slugify = require('slugify');
 const markdownItPlugin = require('./markdown-it-plugin');
