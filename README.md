@@ -1,14 +1,23 @@
-[![view on npm](https://img.shields.io/npm/v/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
-[![npm module downloads](https://img.shields.io/npm/dt/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
+[![view on npm](https://img.shields.io/npm/v/@uttori/plugin-renderer-markdown-it.svg)](https://www.npmjs.com/package/@uttori/plugin-renderer-markdown-it)
+[![npm module downloads](https://img.shields.io/npm/dt/@uttori/plugin-renderer-markdown-it)](https://www.npmjs.com/package/@uttori/plugin-renderer-markdown-it)
 [![Build Status](https://travis-ci.com/uttori/uttori-plugin-renderer-markdown-it.svg?branch=master)](https://travis-ci.com/uttori/uttori-plugin-renderer-markdown-it)
 [![Dependency Status](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it.svg)](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it)
 [![Coverage Status](https://coveralls.io/repos/uttori/uttori-plugin-renderer-markdown-it/badge.svg?branch=master)](https://coveralls.io/r/uttori/uttori-plugin-renderer-markdown-it?branch=master)
+[![Tree-Shaking Support](https://badgen.net/bundlephobia/tree-shaking/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Dependency Count](https://badgen.net/bundlephobia/dependency-count/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Minified + GZip](https://badgen.net/bundlephobia/minzip/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Minified](https://badgen.net/bundlephobia/min/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
 
 # Uttori Renderer - Markdown - MarkdownIt
 
 Uttori renderer support for Markdown powered by [MarkdownIt](https://markdown-it.github.io/).
 
-It uses an internal plugin to allow adding a prefix, and properly handle external domains with `noreferrer nofollow`.
+This also includes a MarkdownIt plugin you can use seperately that supports:
+
+* Generate a Table of Contents based on `H#` header tags with `[toc]`
+* Adding a URL prefix
+* Properly handle external domains with `noopener noreferrer` and optionally set up allowed domains for `nofollow` SEO support to curb spam
+* Support for [WikiLinks](https://en.wikipedia.org/wiki/Help:Link#Wikilinks_(internal_links)) style linking
 
 ## Install
 
@@ -78,7 +87,15 @@ Configuration outside of registration events and Uttori specific items is avalia
       // The closing DOM tag for the TOC container.
       closingTag: '</nav>',
 
-      // Slugify options for convering content to anchor links.
+      // Slugify options for convering headings to anchor links.
+      slugify: {
+        lower: true,
+      },
+    },
+
+    // WikiLinks
+    wikilinks: {
+      // Slugify options for convering Wikilinks to anchor links.
       slugify: {
         lower: true,
       },
@@ -91,6 +108,21 @@ Configuration outside of registration events and Uttori specific items is avalia
 
 ## API Reference
 
+## Classes
+
+<dl>
+<dt><a href="#MarkdownItRenderer">MarkdownItRenderer</a></dt>
+<dd><p>Uttori MarkdownIt Renderer</p>
+</dd>
+</dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#MarkdownItRendererOptions">MarkdownItRendererOptions</a> : <code>object</code></dt>
+<dd></dd>
+</dl>
+
 <a name="MarkdownItRenderer"></a>
 
 ## MarkdownItRenderer
@@ -100,7 +132,8 @@ Uttori MarkdownIt Renderer
 
 * [MarkdownItRenderer](#MarkdownItRenderer)
     * [.configKey](#MarkdownItRenderer.configKey) ⇒ <code>string</code>
-    * [.defaultConfig()](#MarkdownItRenderer.defaultConfig) ⇒ <code>object</code>
+    * [.defaultConfig()](#MarkdownItRenderer.defaultConfig) ⇒ [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions)
+    * [.extendConfig([config])](#MarkdownItRenderer.extendConfig) ⇒ [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions)
     * [.validateConfig(config, _context)](#MarkdownItRenderer.validateConfig)
     * [.register(context)](#MarkdownItRenderer.register)
     * [.renderContent(content, context)](#MarkdownItRenderer.renderContent) ⇒ <code>string</code>
@@ -120,15 +153,27 @@ const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[Markdo
 ```
 <a name="MarkdownItRenderer.defaultConfig"></a>
 
-### MarkdownItRenderer.defaultConfig() ⇒ <code>object</code>
+### MarkdownItRenderer.defaultConfig() ⇒ [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions)
 The default configuration.
 
 **Kind**: static method of [<code>MarkdownItRenderer</code>](#MarkdownItRenderer)  
-**Returns**: <code>object</code> - The configuration.  
+**Returns**: [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions) - The default configuration.  
 **Example** *(MarkdownItRenderer.defaultConfig())*  
 ```js
 const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
 ```
+<a name="MarkdownItRenderer.extendConfig"></a>
+
+### MarkdownItRenderer.extendConfig([config]) ⇒ [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions)
+Create a config that is extended from the default config.
+
+**Kind**: static method of [<code>MarkdownItRenderer</code>](#MarkdownItRenderer)  
+**Returns**: [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions) - The new configration.  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [config] | [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions) | <code>{}</code> | The user provided configuration. |
+
 <a name="MarkdownItRenderer.validateConfig"></a>
 
 ### MarkdownItRenderer.validateConfig(config, _context)
@@ -139,7 +184,7 @@ Validates the provided configuration for required entries.
 | Param | Type | Description |
 | --- | --- | --- |
 | config | <code>object</code> | A configuration object. |
-| config.configKey | <code>object</code> | A configuration object specifically for this plugin. |
+| config.configKey | [<code>MarkdownItRendererOptions</code>](#MarkdownItRendererOptions) | A configuration object specifically for this plugin. |
 | _context | <code>object</code> | Unused |
 
 **Example** *(MarkdownItRenderer.validateConfig(config, _context))*  
@@ -247,6 +292,33 @@ Renders Markdown for a provided string with a provided MarkdownIt configuration.
 ```js
 const html = MarkdownItRenderer.render(content, config);
 ```
+<a name="MarkdownItRendererOptions"></a>
+
+## MarkdownItRendererOptions : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| [html] | <code>boolean</code> | <code>false</code> | Enable HTML tags in source. |
+| [xhtmlOut] | <code>boolean</code> | <code>false</code> | Use '/' to close single tags (<br />). |
+| [breaks] | <code>boolean</code> | <code>false</code> | Convert '\n' in paragraphs into <br>, this is only for full CommonMark compatibility. |
+| [langPrefix] | <code>string</code> | <code>&quot;&#x27;language-&#x27;&quot;</code> | CSS language prefix for fenced blocks. Can be useful for external highlighters. |
+| [linkify] | <code>boolean</code> | <code>false</code> | Autoconvert URL-like text to links. |
+| [typographer] | <code>boolean</code> | <code>false</code> | Enable some language-neutral replacement + quotes beautification. |
+| [quotes] | <code>string</code> | <code>&quot;&#x27;“”‘’&#x27;&quot;</code> | Double + single quotes replacement pairs, when typographer enabled, and smartquotes on. Could be either a String or an Array. For example, you can use '«»„“' for Russian, '„“‚‘' for German, and ['«\xA0', '\xA0»', '‹\xA0', '\xA0›'] for French (including nbsp). |
+| [highlight] | <code>function</code> |  | Highlighter function. Should return escaped HTML, or '' if the source string is not changed and should be escaped externally. If result starts with <pre... internal wrapper is skipped. |
+| [uttori] | <code>object</code> | <code>{}</code> | Custom values for Uttori specific use. |
+| [uttori.baseUrl] | <code>string</code> | <code>&quot;&#x27;&#x27;&quot;</code> | Prefix for relative URLs, useful when the Express app is not at URI root. |
+| [uttori.allowedExternalDomains] | <code>Array.&lt;string&gt;</code> | <code>[]</code> | Allowed External Domains, if a domain is not in this list, it is set to 'nofollow'. Values should be strings of the hostname portion of the URL object (like example.org). |
+| [uttori.openNewWindow] | <code>boolean</code> | <code>true</code> | Open external domains in a new window. |
+| [uttori.toc] | <code>object</code> | <code>{}</code> | Table of Contents settings. |
+| [uttori.toc.openingTag] | <code>string</code> | <code>&quot;&#x27;&lt;nav class&amp;#61;\&quot;table-of-contents\&quot;&gt;&#x27;&quot;</code> | The opening DOM tag for the TOC container. |
+| [uttori.toc.closingTag] | <code>string</code> | <code>&quot;&#x27;&lt;/nav&gt;&#x27;&quot;</code> | The closing DOM tag for the TOC container. |
+| [uttori.toc.slugify] | <code>object</code> | <code>{ lower: true }</code> | Slugify options for convering headings to anchor links. |
+| [uttori.wikilinks] | <code>object</code> | <code>{}</code> | WikiLinks settings. |
+| [uttori.wikilinks.slugify] | <code>object</code> | <code>{ lower: true }</code> | Slugify options for convering Wikilinks to anchor links. |
+
 
 * * *
 

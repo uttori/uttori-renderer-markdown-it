@@ -6,9 +6,10 @@ declare module "index" {
     export = MarkdownItRenderer;
     class MarkdownItRenderer {
         static get configKey(): string;
-        static defaultConfig(): object;
+        static defaultConfig(): MarkdownItRendererOptions;
+        static extendConfig(config?: MarkdownItRendererOptions): MarkdownItRendererOptions;
         static validateConfig(config: {
-            configKey: object;
+            configKey: MarkdownItRendererOptions;
         }, _context: object): void;
         static register(context: {
             hooks: {
@@ -26,4 +27,30 @@ declare module "index" {
         }): object[];
         static render(content: string, config: object): string;
     }
+    namespace MarkdownItRenderer {
+        export { MarkdownItRendererOptions };
+    }
+    type MarkdownItRendererOptions = {
+        html?: boolean;
+        xhtmlOut?: boolean;
+        breaks?: boolean;
+        langPrefix?: string;
+        linkify?: boolean;
+        typographer?: boolean;
+        quotes?: string;
+        highlight?: Function;
+        uttori?: {
+            baseUrl: string;
+            allowedExternalDomains: string[];
+            openNewWindow: boolean;
+            toc: {
+                openingTag: string;
+                closingTag: string;
+                slugify: object;
+            };
+            wikilinks: {
+                slugify: object;
+            };
+        };
+    };
 }

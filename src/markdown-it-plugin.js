@@ -1,4 +1,6 @@
 const MarkdownIt = require('markdown-it');
+const StateInline = require('markdown-it/lib/rules_inline/state_inline');
+const StateCore = require('markdown-it/lib/rules_core/state_core');
 const Token = require('markdown-it/lib/token');
 const slugify = require('slugify');
 
@@ -152,9 +154,122 @@ function Plugin(md, pluginOptions = {}) {
   };
 
   /**
+   * Converts WikiLinks to anchor tags.
+   *
+   * @param {StateInline} state - State of MarkdownIt.
+   * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
+   */
+  md.inline.ruler.before('link', 'wikilink', (state) => {
+    const max = state.posMax;
+    let current = state.src.charAt(state.pos);
+    let next = state.src.charAt(state.pos + 1);
+
+    // Check for opening brackets `[[`
+    if (current !== '[' || next !== '[') {
+      return false;
+    }
+
+    // Simple parser to find the closing tags
+    let openTagCount = 1;
+    let end = -1;
+    let skipNext = false;
+    let text = '';
+    for (let i = state.pos + 1; i < max && end === -1; i++) {
+      current = next;
+      next = state.src.charAt(i + 1);
+      text += next;
+      if (skipNext) {
+        skipNext = false;
+        continue;
+      }
+      if (current === '\n') {
+        // Bad input, abort
+        return false;
+      }
+      if (current === ']' && next === ']') {
+        openTagCount -= 1;
+        // Last closing tag found
+        if (openTagCount === 0) {
+          end = i;
+        }
+        // Skip the next `]`
+        skipNext = true;
+      } else if (current === '[' && next === '[') {
+        openTagCount += 1;
+        // Skip the next `[`
+        skipNext = true;
+      } else if (current === '\\') {
+        // Escape character, skip
+        skipNext = true;
+      }
+    }
+
+    // No closing tag, bad input
+    if (end === -1) {
+      return false;
+    }
+
+    // Build the links parts
+    const parts = text.slice(0, -2).split('|');
+    const link = slugify(parts[0], options.wikilinks.slugify);
+    const anchor_text = parts.length > 1 && parts[1] ? parts[1] : parts[0];
+
+    // Create our tag
+    let token = state.push('link_open', 'a', 1);
+    token.attrs = [['href', link]];
+
+    state.pos += 2;
+    state.posMax = end;
+
+    // We want to use the provided text if any, rather than the whole internal string.
+    // state.md.inline.tokenize(state);
+    token = state.push('text', '', 0);
+    token.content = anchor_text;
+
+    state.pos = end + 2;
+    state.posMax = max;
+    state.push('link_close', 'a', -1);
+
+    return true;
+  });
+
+  /**
+   * Find and replace the TOC tag with the TOC itself.
+   *
+   * @param {StateInline} state - State of MarkdownIt.
+   * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
+   */
+  md.inline.ruler.after('text', 'toc', (state) => {
+    // If the token does not start with `[` it cannot be `[toc]`
+    if (state.src.charCodeAt(state.pos) !== 0x5B) {
+      return false;
+    }
+
+    const match = /^\[toc]$/im.exec(state.src) || [];
+    if (!match || match.length === 0 || match[0] !== '[toc]') {
+      return false;
+    }
+
+    let token;
+    token = state.push('toc_open', 'toc', 1);
+    token.markup = '[toc]';
+    token = state.push('toc_body', '', 0);
+    token.content = '';
+    state.push('toc_close', 'toc', -1);
+
+    // Update the position and continue parsing.
+    const newline = state.src.indexOf('\n', state.pos);
+    /* istanbul ignore next */
+    state.pos = (newline !== -1) ? newline : state.pos + state.posMax + 1;
+
+    return true;
+  });
+
+  /**
    * Caches the headers for use in building the TOC body.
    *
-   * @param {object} state - State of MarkdownIt.
+   * @param {StateCore} state - State of MarkdownIt.
+   * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
    */
   md.core.ruler.push('collect_headers', (state) => {
     // Create a mapping of all the headers, their indentation level, content and slug.
@@ -172,51 +287,11 @@ function Plugin(md, pluginOptions = {}) {
   });
 
   /**
-   * Find and replace the TOC tag with the TOC itself.
-   *
-   * @param {object} state - State of MarkdownIt.
-   * @param {boolean} silent - State of MarkdownIt.
-   */
-  md.inline.ruler.after('text', 'toc', (state, silent) => {
-    // Don't run any pairs in validation mode
-    /* istanbul ignore next */
-    if (silent) {
-      return false;
-    }
-
-    // If the token does not start with `[` it cannot be `[toc]`
-    if (state.src.charCodeAt(state.pos) !== 0x5B) {
-      return false;
-    }
-
-    const match = /^\[toc]$/im.exec(state.src) || [];
-    if (!match || match.length === 0 || match[0] !== '[toc]') {
-      return false;
-    }
-
-    let token;
-    token = state.push('toc_open', 'toc', 1);
-    token.markup = '[toc]';
-
-    token = state.push('toc_body', '', 0);
-    token.content = '';
-
-    token = state.push('toc_close', 'toc', -1);
-
-    // Update the position and continue parsing.
-    const newline = state.src.indexOf('\n', state.pos);
-    /* istanbul ignore next */
-    state.pos = (newline !== -1) ? newline : state.pos + state.posMax + 1;
-
-    return true;
-  });
-
-  /**
    * Uttori specific rules for manipulating the markup.
    *
    * External Domains are filtered for SEO and security.
    *
-   * @param {object} state - State of MarkdownIt.
+   * @param {StateCore} state - State of MarkdownIt.
    */
   md.core.ruler.after('inline', 'uttori', (state) => {
     state.tokens.forEach((blockToken) => {
@@ -235,7 +310,7 @@ function Plugin(md, pluginOptions = {}) {
                   if (options.allowedExternalDomains.includes(url.hostname)) {
                     updateValue(token, 'rel', 'external noopener noreferrer');
                   } else {
-                    updateValue(token, 'rel', 'external nofollow noreferrer');
+                    updateValue(token, 'rel', 'external nofollow noopener noreferrer');
                   }
                   // Open external domains in a new window.
                   if (options.openNewWindow) {

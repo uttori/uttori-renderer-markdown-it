@@ -1,14 +1,23 @@
-[![view on npm](https://img.shields.io/npm/v/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
-[![npm module downloads](https://img.shields.io/npm/dt/uttori-plugin-renderer-markdown-it.svg)](https://www.npmjs.org/package/uttori-plugin-renderer-markdown-it)
+[![view on npm](https://img.shields.io/npm/v/@uttori/plugin-renderer-markdown-it.svg)](https://www.npmjs.com/package/@uttori/plugin-renderer-markdown-it)
+[![npm module downloads](https://img.shields.io/npm/dt/@uttori/plugin-renderer-markdown-it)](https://www.npmjs.com/package/@uttori/plugin-renderer-markdown-it)
 [![Build Status](https://travis-ci.com/uttori/uttori-plugin-renderer-markdown-it.svg?branch=master)](https://travis-ci.com/uttori/uttori-plugin-renderer-markdown-it)
 [![Dependency Status](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it.svg)](https://david-dm.org/uttori/uttori-plugin-renderer-markdown-it)
 [![Coverage Status](https://coveralls.io/repos/uttori/uttori-plugin-renderer-markdown-it/badge.svg?branch=master)](https://coveralls.io/r/uttori/uttori-plugin-renderer-markdown-it?branch=master)
+[![Tree-Shaking Support](https://badgen.net/bundlephobia/tree-shaking/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Dependency Count](https://badgen.net/bundlephobia/dependency-count/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Minified + GZip](https://badgen.net/bundlephobia/minzip/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
+[![Minified](https://badgen.net/bundlephobia/min/@uttori/plugin-renderer-markdown-it)](https://bundlephobia.com/result?p=@uttori/plugin-renderer-markdown-it)
 
 # Uttori Renderer - Markdown - MarkdownIt
 
 Uttori renderer support for Markdown powered by [MarkdownIt](https://markdown-it.github.io/).
 
-It uses an internal plugin to allow adding a prefix, and properly handle external domains with `noreferrer nofollow`.
+This also includes a MarkdownIt plugin you can use seperately that supports:
+
+* Generate a Table of Contents based on `H#` header tags with `[toc]`
+* Adding a URL prefix
+* Properly handle external domains with `noopener noreferrer` and optionally set up allowed domains for `nofollow` SEO support to curb spam
+* Support for [WikiLinks](https://en.wikipedia.org/wiki/Help:Link#Wikilinks_(internal_links)) style linking
 
 ## Install
 
@@ -78,7 +87,15 @@ Configuration outside of registration events and Uttori specific items is avalia
       // The closing DOM tag for the TOC container.
       closingTag: '</nav>',
 
-      // Slugify options for convering content to anchor links.
+      // Slugify options for convering headings to anchor links.
+      slugify: {
+        lower: true,
+      },
+    },
+
+    // WikiLinks
+    wikilinks: {
+      // Slugify options for convering Wikilinks to anchor links.
       slugify: {
         lower: true,
       },

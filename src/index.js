@@ -2,6 +2,29 @@ let debug = () => {}; try { debug = require('debug')('Uttori.Plugin.Render.Markd
 const MarkdownIt = require('markdown-it');
 const slugify = require('slugify');
 const markdownItPlugin = require('./markdown-it-plugin');
+
+/**
+ * @typedef {object} MarkdownItRendererOptions
+ * @property {boolean} [html=false] Enable HTML tags in source.
+ * @property {boolean} [xhtmlOut=false] Use '/' to close single tags (<br />).
+ * @property {boolean} [breaks=false] Convert '\n' in paragraphs into <br>, this is only for full CommonMark compatibility.
+ * @property {string} [langPrefix='language-'] CSS language prefix for fenced blocks. Can be useful for external highlighters.
+ * @property {boolean} [linkify=false] Autoconvert URL-like text to links.
+ * @property {boolean} [typographer=false] Enable some language-neutral replacement + quotes beautification.
+ * @property {string} [quotes='“”‘’'] Double + single quotes replacement pairs, when typographer enabled, and smartquotes on. Could be either a String or an Array. For example, you can use '«»„“' for Russian, '„“‚‘' for German, and ['«\xA0', '\xA0»', '‹\xA0', '\xA0›'] for French (including nbsp).
+ * @property {Function} [highlight] Highlighter function. Should return escaped HTML, or '' if the source string is not changed and should be escaped externally. If result starts with <pre... internal wrapper is skipped.
+ * @property {object} [uttori={}] Custom values for Uttori specific use.
+ * @property {string} [uttori.baseUrl=''] Prefix for relative URLs, useful when the Express app is not at URI root.
+ * @property {string[]} [uttori.allowedExternalDomains=[]] Allowed External Domains, if a domain is not in this list, it is set to 'nofollow'. Values should be strings of the hostname portion of the URL object (like example.org).
+ * @property {boolean} [uttori.openNewWindow=true] Open external domains in a new window.
+ * @property {object} [uttori.toc={}] Table of Contents settings.
+ * @property {string} [uttori.toc.openingTag='<nav class&#61;"table-of-contents">'] The opening DOM tag for the TOC container.
+ * @property {string} [uttori.toc.closingTag='</nav>'] The closing DOM tag for the TOC container.
+ * @property {object} [uttori.toc.slugify={ lower: true }] Slugify options for convering headings to anchor links.
+ * @property {object} [uttori.wikilinks={}] WikiLinks settings.
+ * @property {object} [uttori.wikilinks.slugify={ lower: true }] Slugify options for convering Wikilinks to anchor links.
+ */
+
 /**
  * Uttori MarkdownIt Renderer
  *
@@ -26,60 +49,32 @@ class MarkdownItRenderer {
   /**
    * The default configuration.
    *
-   * @returns {object} The configuration.
+   * @returns {MarkdownItRendererOptions} The default configuration.
    * @example <caption>MarkdownItRenderer.defaultConfig()</caption>
    * const config = { ...MarkdownItRenderer.defaultConfig(), ...context.config[MarkdownItRenderer.configKey] };
    * @static
    */
   static defaultConfig() {
     return {
-      // Enable HTML tags in source
       html: false,
-
-      // Use '/' to close single tags (<br />).
       xhtmlOut: false,
-
-      // Convert '\n' in paragraphs into <br>, this is only for full CommonMark compatibility.
       breaks: false,
-
-      // CSS language prefix for fenced blocks. Can be useful for external highlighters.
       langPrefix: 'language-',
-
-      // Autoconvert URL-like text to links.
       linkify: false,
-
-      // Enable some language-neutral replacement + quotes beautification.
       typographer: false,
-
-      // Double + single quotes replacement pairs, when typographer enabled, and smartquotes on. Could be either a String or an Array.
-      // For example, you can use '«»„“' for Russian, '„“‚‘' for German, and ['«\xA0', '\xA0»', '‹\xA0', '\xA0›'] for French (including nbsp).
       quotes: '“”‘’',
-
-      // Highlighter function. Should return escaped HTML, or '' if the source string is not changed and should be escaped externally.
-      // If result starts with <pre... internal wrapper is skipped.
-      // highlight: (/* str, lang */) => '',
-
-      // Custom Values for Uttori Specific Use
       uttori: {
-        // Prefix for relative URLs, useful when the Express app is not at root.
         baseUrl: '',
-
-        // Allowed External Domains, if a domain is not in this list, it is set to 'nofollow'.
-        // Values should be strings of the hostname portion of the URL object, https://nodejs.org/api/url.html#url_url_hostname
         allowedExternalDomains: [],
-
-        // Open external domains in a new window.
         openNewWindow: true,
-
-        // Table of Contents
         toc: {
-          // The opening DOM tag for the TOC container.
           openingTag: '<nav class="table-of-contents">',
-
-          // The closing DOM tag for the TOC container.
           closingTag: '</nav>',
-
-          // Slugify options for convering content to anchor links.
+          slugify: {
+            lower: true,
+          },
+        },
+        wikilinks: {
           slugify: {
             lower: true,
           },
@@ -89,10 +84,35 @@ class MarkdownItRenderer {
   }
 
   /**
+   * Create a config that is extended from the default config.
+   *
+   * @param {MarkdownItRendererOptions} [config={}] The user provided configuration.
+   * @returns {MarkdownItRendererOptions} The new configration.
+   */
+  static extendConfig(config = {}) {
+    return {
+      ...MarkdownItRenderer.defaultConfig(),
+      ...config,
+      uttori: {
+        ...MarkdownItRenderer.defaultConfig().uttori,
+        ...(config.uttori ? config.uttori : {}),
+        toc: {
+          ...MarkdownItRenderer.defaultConfig().uttori.toc,
+          ...(config.uttori && config.uttori.toc ? config.uttori.toc : {}),
+        },
+        wikilinks: {
+          ...MarkdownItRenderer.defaultConfig().uttori.wikilinks,
+          ...(config.uttori && config.uttori.wikilinks ? config.uttori.wikilinks : {}),
+        },
+      },
+    };
+  }
+
+  /**
    * Validates the provided configuration for required entries.
    *
    * @param {object} config - A configuration object.
-   * @param {object} config.configKey - A configuration object specifically for this plugin.
+   * @param {MarkdownItRendererOptions} config.configKey - A configuration object specifically for this plugin.
    * @param {object} _context - Unused
    * @example <caption>MarkdownItRenderer.validateConfig(config, _context)</caption>
    * MarkdownItRenderer.validateConfig({ ... });
@@ -101,13 +121,13 @@ class MarkdownItRenderer {
   static validateConfig(config, _context) {
     debug('Validating config...');
     if (!config || !config[MarkdownItRenderer.configKey]) {
-      throw new Error(`MarkdownItRenderer Config Warning: '${MarkdownItRenderer.configKey}' configuration key is missing.`);
+      throw new Error(`MarkdownItRenderer Config Error: '${MarkdownItRenderer.configKey}' configuration key is missing.`);
     }
     if (!config[MarkdownItRenderer.configKey].uttori) {
-      throw new Error('MarkdownItRenderer Config Warning: \'uttori\' configuration key is missing.');
+      throw new Error('MarkdownItRenderer Config Error: \'uttori\' configuration key is missing.');
     }
     if (!Array.isArray(config[MarkdownItRenderer.configKey].uttori.allowedExternalDomains)) {
-      throw new TypeError('MarkdownItRenderer Config Warning: \'uttori.allowedExternalDomains\' is missing or not an array.');
+      throw new TypeError('MarkdownItRenderer Config Error: \'uttori.allowedExternalDomains\' is missing or not an array.');
     }
     debug('Validated config.');
   }
@@ -143,14 +163,7 @@ class MarkdownItRenderer {
     if (!context || !context.hooks || typeof context.hooks.on !== 'function') {
       throw new Error("Missing event dispatcher in 'context.hooks.on(event, callback)' format.");
     }
-    const config = {
-      ...MarkdownItRenderer.defaultConfig(),
-      ...context.config[MarkdownItRenderer.configKey],
-      uttori: {
-        ...MarkdownItRenderer.defaultConfig().uttori,
-        ...context.config[MarkdownItRenderer.configKey].uttori,
-      },
-    };
+    const config = MarkdownItRenderer.extendConfig(context.config[MarkdownItRenderer.configKey]);
     if (!config.events) {
       throw new Error("Missing events to listen to for in 'config.events'.");
     }
@@ -188,14 +201,7 @@ class MarkdownItRenderer {
     if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
       throw new Error('Missing configuration.');
     }
-    const config = {
-      ...MarkdownItRenderer.defaultConfig(),
-      ...context.config[MarkdownItRenderer.configKey],
-      uttori: {
-        ...MarkdownItRenderer.defaultConfig().uttori,
-        ...context.config[MarkdownItRenderer.configKey].uttori,
-      },
-    };
+    const config = MarkdownItRenderer.extendConfig(context.config[MarkdownItRenderer.configKey]);
     return MarkdownItRenderer.render(content, config);
   }
 
@@ -222,14 +228,7 @@ class MarkdownItRenderer {
     if (!context || !context.config || !context.config[MarkdownItRenderer.configKey]) {
       throw new Error('Missing configuration.');
     }
-    const config = {
-      ...MarkdownItRenderer.defaultConfig(),
-      ...context.config[MarkdownItRenderer.configKey],
-      uttori: {
-        ...MarkdownItRenderer.defaultConfig().uttori,
-        ...context.config[MarkdownItRenderer.configKey].uttori,
-      },
-    };
+    const config = MarkdownItRenderer.extendConfig(context.config[MarkdownItRenderer.configKey]);
     return collection.map((document) => {
       const html = MarkdownItRenderer.render(document.html, config);
       return { ...document, html };
@@ -254,8 +253,8 @@ class MarkdownItRenderer {
 
     const md = new MarkdownIt(config).use(markdownItPlugin);
 
-    // Remove empty links.
-    content = content.replace('[]()', '');
+    // Remove empty links, as these have caused issues.
+    content.replace(/\[]\(\)/g, '');
 
     // Find missing links, and link them.
     const missingLinks = content.match(/\[(.*)]\(\s?\)/g) || [];
