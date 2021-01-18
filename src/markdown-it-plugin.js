@@ -320,7 +320,8 @@ function Plugin(md, pluginOptions = {}) {
                   // Prefix for relative URLs
                   // eslint-disable-next-line no-lonely-if
                   if (options.baseUrl) {
-                    updateValue(token, 'href', `${options.baseUrl}${href}`);
+                    // Check for opening slash
+                    updateValue(token, 'href', `${options.baseUrl}${href.startsWith('/') ? href : `/${href}`}`);
                   }
                 }
               }

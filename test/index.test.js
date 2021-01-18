@@ -325,6 +325,6 @@ test('MarkdownItRenderer.render(content, config): does not error with a WikiLink
 
 test('MarkdownItRenderer.render(content, config): can render a WikiLink with a baseUrl', (t) => {
   const markdown = 'A deep [[Link]]';
-  const output = '<p>A deep <a href="/link">Link</a></p>';
-  t.is(MarkdownItRenderer.render(markdown, { ...MarkdownItRenderer.defaultConfig(), uttori: { ...MarkdownItRenderer.defaultConfig().uttori, baseUrl: '/' } }), output);
+  const output = '<p>A deep <a href="/wiki/link">Link</a></p>';
+  t.is(MarkdownItRenderer.render(markdown, { ...MarkdownItRenderer.defaultConfig(), uttori: { ...MarkdownItRenderer.defaultConfig().uttori, baseUrl: '/wiki' } }), output);
 });

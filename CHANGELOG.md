@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.1](https://github.com/uttori/uttori-plugin-renderer-markdown-it/compare/v4.0.0...v4.0.1) - 2020-01-17
+
+- 🛠 Fix WikiLinks on subdirectories
+- 🎁 Update dev dependencies
+
 ## [4.0.0](https://github.com/uttori/uttori-plugin-renderer-markdown-it/compare/v3.2.3...v4.0.0) - 2020-01-16
 
 - 🧰 Add ESM Support
