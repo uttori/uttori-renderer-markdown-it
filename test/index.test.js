@@ -277,6 +277,12 @@ Content</p>`;
   t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
 });
 
+test('MarkdownItRenderer.render(content, config): can render a table of contents with code in headers', (t) => {
+  const markdown = '## End / Return (`$00`)\n[toc]\n';
+  const output = '<h2 id="end-return-(dollar00)-0">End / Return (<code>$00</code>)</h2>\n<p><nav class="table-of-contents"><ul class="table-of-contents-h2"><li><a href="#end-return-(dollar00)-0" title="End / Return (`$00`)">End / Return (`$00`)</a></li></ul></nav></p>';
+  t.is(MarkdownItRenderer.render(markdown, MarkdownItRenderer.defaultConfig()), output);
+});
+
 test('MarkdownItRenderer.render(content, config): can render a WikiLink', (t) => {
   const markdown = 'A deep [[Link]]';
   const output = '<p>A deep <a href="link">Link</a></p>';

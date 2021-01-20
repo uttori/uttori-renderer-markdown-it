@@ -5,8 +5,8 @@ const Token = require('markdown-it/lib/token');
 const slugify = require('slugify');
 
 /**
- * @param {Token} token - The MarkdownIt token we are reading.
- * @param {string} key - The key is the attribute name, like `src` or `href`.
+ * @param {Token} token The MarkdownIt token we are reading.
+ * @param {string} key The key is the attribute name, like `src` or `href`.
  * @returns {*|undefined} The read value or undefined.
  */
 const getValue = (token, key) => {
@@ -24,9 +24,9 @@ const getValue = (token, key) => {
 };
 
 /**
- * @param {Token} token - The MarkdownIt token we are updating.
- * @param {string} key - The key is the attribute name, like `src` or `href`.
- * @param {string} value - The value we want to set to the provided key.
+ * @param {Token} token The MarkdownIt token we are updating.
+ * @param {string} key The key is the attribute name, like `src` or `href`.
+ * @param {string} value The value we want to set to the provided key.
  */
 const updateValue = (token, key, value) => {
   let found;
@@ -48,8 +48,8 @@ const updateValue = (token, key, value) => {
  * - Table of Contents with `[toc]`
  * - External Links with Domain Filters
  *
- * @param {MarkdownIt} md - The MarkdownIt instance.
- * @param {object} pluginOptions - Options for the plugin instance.
+ * @param {MarkdownIt} md The MarkdownIt instance.
+ * @param {object} pluginOptions Options for the plugin instance.
  * @returns {object} The instance of Plugin.
  */
 function Plugin(md, pluginOptions = {}) {
@@ -69,8 +69,8 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Adds deep links to the opening of the heading tags with IDs.
    *
-   * @param {Token[]} tokens - Collection of tokens.
-   * @param {number} index  - The index of the current token in the Tokens array.
+   * @param {Token[]} tokens Collection of tokens.
+   * @param {number} index The index of the current token in the Tokens array.
    * @returns {string} The modified header tag with ID.
    */
   md.renderer.rules.heading_open = (tokens, index) => {
@@ -79,9 +79,9 @@ function Plugin(md, pluginOptions = {}) {
     // The text content inside of that tag (# Heading, Heading in this example)
     const label = tokens[index + 1];
     // Guard against empty headers
-    if (label.type === 'inline' && label.children[0]) {
+    if (label.type === 'inline' && label.children.length > 0) {
       // We want to use slugify to provide nicer deep links
-      const slug = slugify(label.children[0].content, options.toc.slugify);
+      const slug = slugify(label.content, options.toc.slugify);
       // Return the new tag HTML
       return `<${tag} id="${slug}-${label.map[0]}">`;
     }
@@ -91,8 +91,8 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Creates the opening tag of the TOC.
    *
-   * @param {Token[]} _tokens - Collection of tokens.
-   * @param {number} _index  - The index of the current token in the Tokens array.
+   * @param {Token[]} _tokens Collection of tokens.
+   * @param {number} _index The index of the current token in the Tokens array.
    * @returns {string} The opening tag of the TOC.
    */
   md.renderer.rules.toc_open = (_tokens, _index) => options.toc.openingTag;
@@ -100,8 +100,8 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Creates the closing tag of the TOC.
    *
-   * @param {Token[]} _tokens - Collection of tokens.
-   * @param {number} _index  - The index of the current token in the Tokens array.
+   * @param {Token[]} _tokens Collection of tokens.
+   * @param {number} _index The index of the current token in the Tokens array.
    * @returns {string} The closing tag of the TOC.
    */
   md.renderer.rules.toc_close = (_tokens, _index) => options.toc.closingTag;
@@ -109,8 +109,8 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Creates the contents of the TOC.
    *
-   * @param {Token[]} _tokens - Collection of tokens.
-   * @param {number} _index  - The index of the current token in the Tokens array.
+   * @param {Token[]} _tokens Collection of tokens.
+   * @param {number} _index The index of the current token in the Tokens array.
    * @returns {string} The contents tag of the TOC.
    */
   md.renderer.rules.toc_body = (_tokens, _index) => {
@@ -156,7 +156,7 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Converts WikiLinks to anchor tags.
    *
-   * @param {StateInline} state - State of MarkdownIt.
+   * @param {StateInline} state State of MarkdownIt.
    * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
    */
   md.inline.ruler.before('link', 'wikilink', (state) => {
@@ -236,7 +236,7 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Find and replace the TOC tag with the TOC itself.
    *
-   * @param {StateInline} state - State of MarkdownIt.
+   * @param {StateInline} state State of MarkdownIt.
    * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
    */
   md.inline.ruler.after('text', 'toc', (state) => {
@@ -268,19 +268,19 @@ function Plugin(md, pluginOptions = {}) {
   /**
    * Caches the headers for use in building the TOC body.
    *
-   * @param {StateCore} state - State of MarkdownIt.
+   * @param {StateCore} state State of MarkdownIt.
    * @see {@link https://markdown-it.github.io/markdown-it/#Ruler.after|Ruler.after}
    */
   md.core.ruler.push('collect_headers', (state) => {
     // Create a mapping of all the headers, their indentation level, content and slug.
     state.tokens.forEach((token, i, tokens) => {
       if (token.type === 'heading_close') {
-        const heading = tokens[i - 1];
+        const inline = tokens[i - 1];
         headings.push({
-          content: heading.content,
-          index: heading.map[0],
-          level: +token.tag.slice(1, 2),
-          slug: slugify(heading.content, options.toc.slugify),
+          content: inline.content,
+          index: inline.map[0],
+          level: Number.parseInt(token.tag.slice(1, 2), 10),
+          slug: slugify(inline.content, options.toc.slugify),
         });
       }
     });
@@ -288,10 +288,9 @@ function Plugin(md, pluginOptions = {}) {
 
   /**
    * Uttori specific rules for manipulating the markup.
-   *
    * External Domains are filtered for SEO and security.
    *
-   * @param {StateCore} state - State of MarkdownIt.
+   * @param {StateCore} state State of MarkdownIt.
    */
   md.core.ruler.after('inline', 'uttori', (state) => {
     state.tokens.forEach((blockToken) => {
